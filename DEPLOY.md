@@ -38,17 +38,55 @@ cloudflared tunnel --url http://localhost:8080
 Cloudflare prints an `https://<random>.trycloudflare.com` URL. Share it with
 your friend — the WebSocket goes through the same hostname, so it just works.
 
-### Fly.io / Render / Railway (always-on, free tier)
+### Fly.io (recommended for always-on)
 
-- The repo is already deploy-ready. `package.json` has `start: node server.js`.
-- Make sure the platform's port is set via the `PORT` env var (the server reads
-  it). `8080` is the local default.
-- Fly.io example:
+The repo includes a `Dockerfile` and `.dockerignore` ready for Fly. Cost is
+typically ~$2/mo for one always-on shared-cpu-1x:256MB machine, which sits
+inside Fly's $5/mo free credit.
 
-  ```bash
-  fly launch                         # accept defaults; uses Node detection
-  fly deploy
-  ```
+**One-time setup:**
+
+```bash
+brew install flyctl                       # macOS; or curl -L https://fly.io/install.sh | sh
+fly auth signup                           # browser; needs a credit card for verification
+```
+
+**Deploy from the project root:**
+
+```bash
+fly launch --no-deploy                    # accept name+region; say NO to Postgres/Redis/Tigris
+```
+
+That generates `fly.toml`. Open it and make sure these are set so a machine
+stays running 24/7 (rooms expire after 48h, so always-on matters):
+
+```toml
+[http_service]
+  internal_port = 8080
+  force_https   = true
+  auto_stop_machines  = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory_mb = 256
+```
+
+Then deploy and open:
+
+```bash
+fly deploy
+fly open                                  # opens the live URL in your browser
+```
+
+Updates: edit any file → `fly deploy` again. That's the whole loop.
+
+### Other always-on options
+
+- **Render** — connect GitHub repo via the web UI; free tier sleeps after 15min idle (cold start when someone visits).
+- **Railway** — similar; uses your $5/mo free credit.
 
 ## Notes & limits
 
