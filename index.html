@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chinese Checkers</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Chinese Checkers</h1>
+      <div class="header-right">
+        <span id="roomCodeBox" class="room-code hidden"></span>
+        <button id="newGameBtn">New Game</button>
+      </div>
+    </header>
+
+    <!-- Setup screen -->
+    <section id="setup">
+      <div class="setup-card">
+        <h2>New Game</h2>
+
+        <div id="resumeBox" class="resume-box hidden"></div>
+
+        <div class="setup-row">
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="local">Local (hot-seat)</option>
+            <option value="online">Online</option>
+          </select>
+        </div>
+
+        <!-- Local config -->
+        <div id="localOpts">
+          <div class="setup-row">
+            <label for="playerCount">Players</label>
+            <select id="playerCount">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="6" selected>6</option>
+            </select>
+          </div>
+          <div class="setup-row" style="align-items: flex-start;">
+            <label>AI players</label>
+            <div class="ai-list" id="aiList">
+              <label><input type="checkbox" data-idx="0" /> Player 1</label>
+              <label><input type="checkbox" data-idx="1" checked /> Player 2</label>
+              <label><input type="checkbox" data-idx="2" checked /> Player 3</label>
+              <label><input type="checkbox" data-idx="3" checked /> Player 4</label>
+              <label><input type="checkbox" data-idx="4" checked /> Player 5</label>
+              <label><input type="checkbox" data-idx="5" checked /> Player 6</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online entry -->
+        <div id="onlineOpts" class="hidden">
+          <div class="setup-row">
+            <label for="usernameInput">Username</label>
+            <input id="usernameInput" type="text" maxlength="20" placeholder="Your name" />
+          </div>
+          <div class="hint">Used to label your presence to the host and other players.</div>
+        </div>
+
+        <div class="start-row">
+          <button id="startBtn" class="primary">Start Game</button>
+          <button id="enterLobbyBtn" class="primary hidden" disabled>Enter Lobby</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lobby screen -->
+    <section id="lobby" class="hidden">
+      <div class="lobby-container">
+        <div class="lobby-header">
+          <h2>Lobby</h2>
+          <button id="lobbyBack">Back</button>
+        </div>
+
+        <div class="lobby-grid">
+          <!-- Create room -->
+          <div class="lobby-card">
+            <h3>Create a room</h3>
+            <div class="setup-row">
+              <label for="createPlayerCount">Players</label>
+              <select id="createPlayerCount">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+              </select>
+            </div>
+            <div class="setup-row">
+              <label for="createHostSlot">Your color</label>
+              <select id="createHostSlot"></select>
+            </div>
+            <div class="setup-row">
+              <label for="createGuestSlot">Friend's color</label>
+              <select id="createGuestSlot"></select>
+            </div>
+            <div class="setup-row checkbox-row">
+              <label class="cb"><input type="checkbox" id="createPrivate" /> Private (don't list in lobby)</label>
+            </div>
+            <div class="hint">All other slots will be AI.</div>
+            <button id="createBtn" class="primary">Create Room</button>
+          </div>
+
+          <!-- Browse / join -->
+          <div class="lobby-card">
+            <div class="lobby-card-header">
+              <h3>Open rooms</h3>
+              <button id="refreshLobbyBtn">Refresh</button>
+            </div>
+            <div id="lobbyList" class="lobby-list">
+              <div class="empty">Loading…</div>
+            </div>
+            <div class="join-by-code">
+              <span>Or join with code:</span>
+              <input id="joinByCode" type="text" maxlength="6" placeholder="ABCDEF" />
+              <button id="joinByCodeBtn">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Host waiting screen -->
+    <section id="hostWait" class="hidden">
+      <div class="setup-card">
+        <h2>Your room</h2>
+        <div class="code-display">
+          Code <strong id="hostCodeText"></strong>
+          <span id="hostPublicBadge" class="badge-tag tag-public">Public</span>
+          <span id="hostPrivateBadge" class="badge-tag tag-private hidden">Private</span>
+        </div>
+        <p id="hostStatus" class="muted"></p>
+
+        <div id="approvalBox" class="approval-box hidden">
+          <div class="approval-text">
+            <strong id="approvalName"></strong> wants to join your room.
+          </div>
+          <div class="approval-actions">
+            <button id="denyBtn">Deny</button>
+            <button id="approveBtn" class="primary">Approve</button>
+          </div>
+        </div>
+
+        <div class="row-spread">
+          <button id="cancelRoomBtn">Cancel Room</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guest waiting (after request) -->
+    <section id="guestWait" class="hidden">
+      <div class="setup-card">
+        <h2>Awaiting approval</h2>
+        <p>Sent a join request to <strong id="joinPendingHost"></strong>.</p>
+        <p id="joinPendingMsg" class="muted">Waiting for the host…</p>
+        <div class="row-spread">
+          <button id="cancelJoinBtn">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game screen -->
+    <section id="game" class="hidden">
+      <div class="board-wrap">
+        <svg id="board" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <aside class="sidebar">
+        <div id="youBox" class="you-box hidden"></div>
+        <div id="status"></div>
+        <div id="players"></div>
+        <div class="controls">
+          <button id="undoBtn">Undo (R)</button>
+          <button id="endTurnBtn" class="primary">End Turn (Space)</button>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initUI } from './ui.js';
+    initUI();
+  </script>
+</body>
+</html>
